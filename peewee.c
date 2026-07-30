@@ -22,6 +22,7 @@
 #include <avr/io.h>
 
 #define PIEZOSPEAKER     (1<<PINB0)
+#define THE_LED          (1<<PINB1)
 
 #define SPEAKEROFF    TCCR0A=(0x02) // PIN to normal port operation
 #define SPEAKERON    TCCR0A=((1<<COM0A0) | 0x02) // toggle PIN
@@ -33,6 +34,7 @@ uint8_t cycles_global = 10;
 
 void init_timer(){
    DDRB |= PIEZOSPEAKER; // piezo as output
+   DDRB |= THE_LED; // peewee has an LED eye as output
 
    TCCR0A=(1<<COM0A0) | 0x02; //CTC mode and toogle OC0A port on compare match
    TCCR0B=(1<<CS00) ; // no prescaling
@@ -127,6 +129,11 @@ void playPattern(){
     }
 }
 
+void toggle_led()
+{
+    PINB = THE_LED;
+}
+
 int main(void)
 {
     // Initiation
@@ -135,6 +142,7 @@ int main(void)
     while(1)
     {
 
+        toggle_led();
 
         // basic example
         /*
