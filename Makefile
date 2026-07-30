@@ -21,14 +21,11 @@ CLOCK      = 16500000
 PROGRAMMER = -c micronucleus
 OBJECTS    = $(PROJECT).o
 
-
-# Tune the lines below only if you know what you are doing:
-
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
-all:	$(PROJECT).hex
+all: $(PROJECT).hex
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -43,12 +40,8 @@ all:	$(PROJECT).hex
 .c.s:
 	$(COMPILE) -S $< -o $@
 
-flash:	all
+flash: all
 	$(AVRDUDE) -U flash:w:$(PROJECT).hex:i --noverify-memory
-
-# if you use a bootloader, change the command below appropriately:
-load: all
-	bootloadHID $(PROJECT).hex
 
 clean:
 	rm -f $(PROJECT).hex $(PROJECT).elf $(OBJECTS)
