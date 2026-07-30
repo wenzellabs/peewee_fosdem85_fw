@@ -44,7 +44,7 @@ all:	$(PROJECT).hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -U flash:w:$(PROJECT).hex:i
+	$(AVRDUDE) -U flash:w:$(PROJECT).hex:i --noverify-memory
 
 # if you use a bootloader, change the command below appropriately:
 load: all
