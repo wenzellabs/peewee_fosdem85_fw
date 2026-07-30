@@ -20,6 +20,7 @@
 
 *************************************************************************/
 #include <avr/io.h>
+#include <avr/power.h>
 
 #define PIEZOSPEAKER     (1<<PINB0)
 #define THE_LED          (1<<PINB1)
@@ -33,6 +34,11 @@ uint16_t delay_global = 16;
 uint8_t cycles_global = 10;
 
 void init_timer(){
+   // we're comming from a 1.2MHz ATtiny13 and now run on a
+   // 16.5MHz ATtiny85 so we scale down. x16 would be closer
+   // but penguins tweet in lower voice so x32.
+   clock_prescale_set(clock_div_32); // scale ATtiny85 16.5MHz down to ~1.03MHz (closer to original 1.2MHz of ATtiny13)
+
    DDRB |= PIEZOSPEAKER; // piezo as output
    DDRB |= THE_LED; // peewee has an LED eye as output
 
