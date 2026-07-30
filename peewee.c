@@ -32,11 +32,11 @@ uint16_t delay_global = 16;
 uint8_t cycles_global = 10;
 
 void init_timer(){
-   DDRB |= PIEZOSPEAKER; // piezo as output   
+   DDRB |= PIEZOSPEAKER; // piezo as output
 
    TCCR0A=(1<<COM0A0) | 0x02; //CTC mode and toogle OC0A port on compare match
    TCCR0B=(1<<CS00) ; // no prescaling
-   OCR0A=255; // in CTC Mode the counter counts up to OCR0A     
+   OCR0A=255; // in CTC Mode the counter counts up to OCR0A
 }
 
 // unspecified delay time
@@ -109,11 +109,11 @@ void playPattern(){
     delay_global = delay_global - 4;
     cycles_global = cycles_global - 1;
 
-    // die Werte zurücksetzen, wenn sie 
+    // die Werte zurücksetzen, wenn sie
     // zu gross oder zu klein werden
     if(tone_global > 180) {
     tone_global = tone_global - 190;
-    } 
+    }
     if(delay_global < 8) {
         delay_global = delay_global + 24;
     }
@@ -141,10 +141,10 @@ int main(void)
         uint8_t tonhoehe;
         tonhoehe = 122;
 
-        OCR0A = 255; 
+        OCR0A = 255;
         delay_(400);
 
-        SPEAKEROFF; 
+        SPEAKEROFF;
         delay_(9000);
 
         OCR0A = tonhoehe;
@@ -172,4 +172,4 @@ int main(void)
 *   If you want to use this software for commercial purposes and you      *
 *   don't want to make it open source, please contact the authors for     *
 *   licensing.                                                            *
-***************************************************************************/ 
+***************************************************************************/
