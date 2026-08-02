@@ -6,6 +6,7 @@
 
    28.9.08 christoph(at)roboterclub-freiburg.de
    08.9.15 urbanbieri(at)gmx.ch
+   07.29.26 wuntingchan(at)protonmail.com
    2026-07-30 homemade(at)wenzellabs.de - attiny85 port for FOSDEM-85 HW
 
 *************************************************************************/
@@ -24,8 +25,25 @@
 
 #define PIEZOSPEAKER     (1<<PINB0)
 
-#define SPEAKEROFF    TCCR0A=(0x02) // PIN to normal port operation
-#define SPEAKERON    TCCR0A=((1<<COM0A0) | 0x02) // toggle PIN
+#define SPEAKEROFF  do {TCCR0A=(0x02);} while(0) // PIN to normal port operation
+#define SPEAKERON   do {TCCR0A=((1<<COM0A0) | 0x02);} while (0) // toggle PIN
+
+// random pauses settings
+#define SHORT_PAUSE_MIN 1000u
+#define SHORT_PAUSE_MAX 7000u
+
+#define LONG_PAUSE_MIN 15000u
+#define LONG_PAUSE_MAX 60000u
+
+#define GROUP_PAUSE_MIN 30000u
+#define GROUP_PAUSE_MAX 65000u
+
+#define CHIRPS_PER_GROUP_MIN 5u
+#define CHIRPS_PER_GROUP_MAX 14u
+
+// random pauses variables
+uint16_t random_state = 0xACE1u;
+
 
 // global variables
 uint8_t tone_global = 101;
@@ -58,6 +76,29 @@ void delay_(uint16_t duration){
       for(n=0;n<3;n++) PORTB &= ~(PIEZOSPEAKER);
    }
 }
+
+// 16-bit pseudo random num generator
+uint16_t random16(void)
+{
+    uint8_t least_significant_bit;
+
+    least_significant_bit = random_state & 1u;
+    random_state >>= 1;
+
+    if (least_significant_bit) {
+        random_state ^= 0xB400u;
+    }
+
+    return random_state;
+}
+
+// Return a random number from minimum through maximum, inclusive.
+uint16_t random_range(uint16_t minimum, uint16_t maximum)
+{
+    return minimum +
+           (random16() % ((maximum - minimum) + 1u));
+}
+
 
 void glissando(uint8_t start, uint8_t stop, uint16_t duration){
     uint8_t i;
@@ -104,11 +145,25 @@ void chirp(uint8_t tone, uint16_t delay){
 
 void playPattern(){
 
+    uint16_t random_pause;
+
     chirp(tone_global, delay_global);
+
+    random_pause = random_range(
+        SHORT_PAUSE_MIN,
+            SHORT_PAUSE_MAX
+        );
+
+    if ((random16() & 0x07u) == 0u) {
+            random_pause = random_range(
+                    LONG_PAUSE_MIN,
+                    LONG_PAUSE_MAX
+            );
+    }
 
     // kurze Pause
     SPEAKEROFF;
-    delay_(2000);
+    delay_(random_pause);
     SPEAKERON;
 
     // verändere die Werte
@@ -128,9 +183,17 @@ void playPattern(){
     // immer nach 10 Durchläufen macht der Vogel eine längere Pause
     if (cycles_global == 0){
         SPEAKEROFF;
-        delay_(30000);
+        delay_(
+            random_range(
+                GROUP_PAUSE_MIN,
+                GROUP_PAUSE_MAX
+            )
+        );
         SPEAKERON;
-        cycles_global = 10;
+        cycles_global = (uint8_t)random_range(
+            CHIRPS_PER_GROUP_MIN,
+            CHIRPS_PER_GROUP_MAX
+        );
     }
 }
 
@@ -167,6 +230,7 @@ int main(void)
 *
 *   (c) 2008 christoph(at)roboterclub-freiburg.de
 *       2015 urbanbieri(at)gmx.ch
+*       2026 wuntingchan(at)protonmail.com
 *       2026 homemade(at)wenzellabs.de
 *
 ***************************************************************************
