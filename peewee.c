@@ -23,7 +23,6 @@
 #include <avr/power.h>
 
 #define PIEZOSPEAKER     (1<<PINB0)
-#define THE_LED          (1<<PINB1)
 
 #define SPEAKEROFF    TCCR0A=(0x02) // PIN to normal port operation
 #define SPEAKERON    TCCR0A=((1<<COM0A0) | 0x02) // toggle PIN
@@ -34,13 +33,13 @@ uint16_t delay_global = 16;
 uint8_t cycles_global = 10;
 
 void init_timer(){
+#ifdef __AVR_ATtiny85__
    // we're comming from a 1.2MHz ATtiny13 and now run on a
-   // 16.5MHz ATtiny85 so we scale down. x16 would be closer
-   // but penguins tweet in lower voice so x32.
-   clock_prescale_set(clock_div_32); // scale ATtiny85 16.5MHz down to ~1.03MHz (closer to original 1.2MHz of ATtiny13)
+   // 16.5MHz ATtiny85 so we scale down. x16 is closest
+   clock_prescale_set(clock_div_16); // scale ATtiny85 16.5MHz down to ~1.03MHz (closer to original 1.2MHz of ATtiny13)
+#endif
 
    DDRB |= PIEZOSPEAKER; // piezo as output
-   DDRB |= THE_LED; // peewee has an LED eye as output
 
    TCCR0A=(1<<COM0A0) | 0x02; //CTC mode and toogle OC0A port on compare match
    TCCR0B=(1<<CS00) ; // no prescaling
@@ -135,11 +134,6 @@ void playPattern(){
     }
 }
 
-void toggle_led()
-{
-    PINB = THE_LED;
-}
-
 int main(void)
 {
     // Initiation
@@ -147,9 +141,6 @@ int main(void)
 
     while(1)
     {
-
-        toggle_led();
-
         // basic example
         /*
         uint8_t tonhoehe;
