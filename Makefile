@@ -19,9 +19,10 @@ PROJECT=peewee
 DEVICE     = attiny85
 CLOCK      = 16500000
 PROGRAMMER = -c micronucleus
+MKIIPROGRAMMER = -c avrispmkII
 OBJECTS    = $(PROJECT).o
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
+AVRDUDE = avrdude -p $(DEVICE)
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
@@ -41,7 +42,7 @@ all: $(PROJECT).hex
 	$(COMPILE) -S $< -o $@
 
 flash: all
-	$(AVRDUDE) -U flash:w:$(PROJECT).hex:i --noverify-memory
+	$(AVRDUDE) $(PROGRAMMER) -U flash:w:$(PROJECT).hex:i --noverify-memory
 
 clean:
 	rm -f $(PROJECT).hex $(PROJECT).elf $(OBJECTS)
@@ -62,3 +63,24 @@ disasm:	$(PROJECT).elf
 
 cpp:
 	$(COMPILE) -E $(PROJECT).c
+
+# fuse mangling requires AVR ISP mk-II
+# (the micronucleus bootloader does not support fuse reading or writing)
+
+# original FOSDEM-85 (ships with micronucleus) fuses read:
+# lfuse = 0xe1
+# hfuse = 0xdd
+# efuse = 0xfe
+
+mk2readfuse:
+	$(AVRDUDE) $(MKIIPROGRAMMER) -U lfuse:r:-:h -U hfuse:r:-:h -U efuse:r:-:h
+
+# but we want a disabled BOD, that's
+# hfuse = 0xdf
+mk2disablebod:
+	$(AVRDUDE) $(MKIIPROGRAMMER) -U hfuse:w:0xdf:m
+
+# but we want a 1.8V (lowest) BOD, that's
+# hfuse = 0xde
+mk2bodlow:
+	$(AVRDUDE) $(MKIIPROGRAMMER) -U hfuse:w:0xde:m
