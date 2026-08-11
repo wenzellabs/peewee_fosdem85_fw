@@ -6,7 +6,7 @@ called peewee the penguin.
 
 <img src="pics/peewee.jpg">
 
-connect the solar cell (must not exceed 5V!) to or instead of the battery connector. bonus: there's already a dioode that protects from feeding current in the solar cell in darkness.
+connect the solar cell (must not exceed 5V!) to or instead of the battery connector. bonus: there's already a diode that protects from feeding current in the solar cell in darkness.
 
 connect the piezo tweeter to `GND` and `#0`
 
