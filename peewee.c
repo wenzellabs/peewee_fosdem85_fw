@@ -42,8 +42,43 @@
 #define CHIRPS_PER_GROUP_MAX 14u
 
 // random pauses variables
-uint16_t random_state = 0xACE1u;
+uint16_t random_state = 0xACE1u;  // will be overwritten by seed_rng()
 
+// Seed the LFSR from ADC noise (internal temperature sensor on ATtiny85).
+// Each conversion contributes one bit: bit0 XOR bit1 of the ADC result.
+// Guarded so the code still builds for ATtiny13 (uses compile-time seed).
+static void seed_rng(void)
+{
+#ifdef __AVR_ATtiny85__
+    uint8_t  i;
+    uint16_t seed = 0;
+
+    // Internal 1.1 V reference (REFS1=1, REFS0=0), temperature sensor MUX=0x0F
+    ADMUX  = (1 << REFS1) | 0x0Fu;
+    // Enable ADC, prescaler /128  →  16.5 MHz/128 ≈ 129 kHz (within 50–200 kHz spec)
+    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
+
+    // Discard the first conversion (reference and mux need settling time)
+    ADCSRA |= (1 << ADSC);
+    while (ADCSRA & (1 << ADSC));
+
+    // Collect 16 bits: XOR the two LSBs of each result, shift seed by one
+    for (i = 0; i < 16u; i++) {
+        uint16_t adc_val;
+        ADCSRA |= (1 << ADSC);
+        while (ADCSRA & (1 << ADSC));
+        adc_val = ADC;
+        seed = (uint16_t)(seed << 1) | ((adc_val ^ (adc_val >> 1)) & 0x01u);
+    }
+
+    // Disable ADC to save power
+    ADCSRA &= ~(1 << ADEN);
+
+    // 0x0000 is the only state that locks a Galois LFSR forever; fall back
+    // to the compile-time constant when the noise collapsed to all zeros.
+    random_state = (seed != 0x0000u) ? seed : 0xACE1u;
+#endif
+}
 
 // global variables
 uint8_t tone_global = 101;
@@ -51,6 +86,8 @@ uint16_t delay_global = 16;
 uint8_t cycles_global = 10;
 
 void init_timer(){
+    seed_rng();
+
 #ifdef __AVR_ATtiny85__
    // we're comming from a 1.2MHz ATtiny13 and now run on a
    // 16.5MHz ATtiny85 so we scale down. x16 is closest
