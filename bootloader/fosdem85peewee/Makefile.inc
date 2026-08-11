@@ -9,6 +9,8 @@
 F_CPU = 16500000
 DEVICE = attiny85
 
+PROGRAMMER = -c avrisp2
+
 # hexadecimal address for bootloader section to begin. To calculate the best value:
 # - make clean; make main.hex; ### output will list data: 1592 (or something like that)
 # - for the size of your device (8kb = 1024 * 8 = 8192) subtract above value = 6598
