@@ -44,6 +44,9 @@ all: $(PROJECT).hex
 flash: all
 	$(AVRDUDE) $(PROGRAMMER) -U flash:w:$(PROJECT).hex:i --noverify-memory
 
+mk2flash: all
+	$(AVRDUDE) $(MKIIPROGRAMMER) -U flash:w:$(PROJECT).hex:i
+
 clean:
 	rm -f $(PROJECT).hex $(PROJECT).elf $(OBJECTS)
 
